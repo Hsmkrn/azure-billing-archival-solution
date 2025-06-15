@@ -1,3 +1,6 @@
+## ADF/ADB Data Flow Logic (Weekend Archival)
+
+```text
 [Cosmos Source]
    ↓
 [Derived Column]
@@ -10,6 +13,6 @@
 [Flatten Items] (on item array)
    ↓
 [Sink to ADLS]
-   - Path: /success/yyyy/MM/dd/
-   - Path: /failed/yyyy/MM/dd/
-   - Path: /items/yyyy/MM/dd/
+   - SUCCESS Path: /success/yyyy/MM/dd/
+   - FAILED Path: /failed/yyyy/MM/dd/
+   - ITEMS  Path: /items/yyyy/MM/dd/
