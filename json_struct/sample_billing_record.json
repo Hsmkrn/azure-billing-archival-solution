@@ -41,5 +41,5 @@
   },
   "_ts": 1718354620,
   "partitionKey": "U98765",
-  "ttl": 8640000     // 100 days = 90 + 10 buffer in seconds
+  "ttl": 8640000      
 }
