@@ -1,0 +1,45 @@
+{
+  "id": "TXN_20250614_00123",
+  "userId": "U98765",
+  "billingDate": "2025-06-14T11:23:45Z",
+  "status": "SUCCESS",
+  "paymentDetails": {
+    "gateway": "Razorpay",
+    "transactionId": "PAY_abc123xyz",
+    "attempts": 2,
+    "mode": "credit_card",
+    "timestamp": "2025-06-14T11:23:30Z",
+    "failureReason": null
+  },
+  "items": [
+    {
+      "itemId": "ITEM001",
+      "itemName": "Noise-Cancelling Headphones",
+      "quantity": 1,
+      "pricePerUnit": 2999,
+      "totalAmount": 2999,
+      "discounts": [
+        { "type": "festival", "amount": 300 },
+        { "type": "coupon", "code": "WELCOME100", "amount": 100 }
+      ]
+    }
+  ],
+  "summary": {
+    "subtotal": 5999,
+    "totalDiscount": 600,
+    "tax": 540,
+    "finalAmount": 5939
+  },
+  "location": {
+    "city": "Delhi",
+    "country": "India"
+  },
+  "metadata": {
+    "platform": "AndroidApp",
+    "apiSource": "payment_service",
+    "version": "v1.4"
+  },
+  "_ts": 1718354620,
+  "partitionKey": "U98765",
+  "ttl": 8640000     // 100 days = 90 + 10 buffer in seconds
+}
