@@ -1,0 +1,30 @@
+{
+  "name": "WeekendBillingArchiveTrigger",
+  "properties": {
+    "type": "ScheduleTrigger",
+    "typeProperties": {
+      "recurrence": {
+        "frequency": "Week",
+        "interval": 1,
+        "startTime": "2025-06-21T18:29:00Z",
+        "timeZone": "India Standard Time",
+        "schedule": {
+          "weekDays": ["Saturday"],
+          "hours": [23],
+          "minutes": [59]
+        }
+      }
+    },
+    "pipelines": [
+      {
+        "pipelineReference": {
+          "referenceName": "CosmosDBToADLSArchivePipeline",
+          "type": "PipelineReference"
+        },
+        "parameters": {
+          "thresholdDate": "@formatDateTime(addDays(utcnow(), -90), 'yyyy-MM-dd')"
+        }
+      }
+    ]
+  }
+}
