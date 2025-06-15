@@ -1,0 +1,185 @@
+{
+  "name": "CosmosDBToADLSArchivePipeline",
+  "properties": {
+    "description": "Weekend archival pipeline for Cosmos DB billing data into ADLS, categorized as success, failed, and items.",
+    "parameters": {
+      "thresholdDate": {
+        "type": "String"
+      }
+    },
+    "activities": [
+      {
+        "name": "SetUnixThreshold",
+        "type": "SetVariable",
+        "typeProperties": {
+          "variableName": "thresholdUnixTs",
+          "value": {
+            "value": "@div(ticks(addDays(utcnow(), -90)), 10000000)",
+            "type": "Expression"
+          }
+        }
+      },
+      {
+        "name": "LookupOldRecords",
+        "type": "Lookup",
+        "dependsOn": [
+          {
+            "activity": "SetUnixThreshold",
+            "dependencyConditions": ["Succeeded"]
+          }
+        ],
+        "typeProperties": {
+          "source": {
+            "type": "CosmosDbSqlApiSource",
+            "sqlQuery": "SELECT * FROM c WHERE c._ts < @variables('thresholdUnixTs')"
+          }
+        },
+        "dataset": {
+          "referenceName": "CosmosDBBillingCollection",
+          "type": "DatasetReference"
+        }
+      },
+      {
+        "name": "FilterSuccessRecords",
+        "type": "Filter",
+        "dependsOn": [
+          {
+            "activity": "LookupOldRecords",
+            "dependencyConditions": ["Succeeded"]
+          }
+        ],
+        "typeProperties": {
+          "items": "@activity('LookupOldRecords').output.value",
+          "condition": "@equals(item().status, 'SUCCESS')"
+        }
+      },
+      {
+        "name": "FilterFailedRecords",
+        "type": "Filter",
+        "dependsOn": [
+          {
+            "activity": "LookupOldRecords",
+            "dependencyConditions": ["Succeeded"]
+          }
+        ],
+        "typeProperties": {
+          "items": "@activity('LookupOldRecords').output.value",
+          "condition": "@equals(item().status, 'FAILED')"
+        }
+      },
+      {
+        "name": "FlattenItemsArray",
+        "type": "Filter",
+        "dependsOn": [
+          {
+            "activity": "LookupOldRecords",
+            "dependencyConditions": ["Succeeded"]
+          }
+        ],
+        "typeProperties": {
+          "items": "@activity('LookupOldRecords').output.value",
+          "condition": "@not(empty(item().items))"
+        }
+      },
+      {
+        "name": "CopySuccessToADLS",
+        "type": "Copy",
+        "dependsOn": [
+          {
+            "activity": "FilterSuccessRecords",
+            "dependencyConditions": ["Succeeded"]
+          }
+        ],
+        "inputs": [
+          {
+            "referenceName": "SuccessFilteredDataset",
+            "type": "DatasetReference"
+          }
+        ],
+        "outputs": [
+          {
+            "referenceName": "ADLSSuccessPath",
+            "type": "DatasetReference"
+          }
+        ],
+        "typeProperties": {
+          "source": {
+            "type": "JsonSource"
+          },
+          "sink": {
+            "type": "JsonSink"
+          }
+        }
+      },
+      {
+        "name": "CopyFailedToADLS",
+        "type": "Copy",
+        "dependsOn": [
+          {
+            "activity": "FilterFailedRecords",
+            "dependencyConditions": ["Succeeded"]
+          }
+        ],
+        "inputs": [
+          {
+            "referenceName": "FailedFilteredDataset",
+            "type": "DatasetReference"
+          }
+        ],
+        "outputs": [
+          {
+            "referenceName": "ADLSFailedPath",
+            "type": "DatasetReference"
+          }
+        ],
+        "typeProperties": {
+          "source": {
+            "type": "JsonSource"
+          },
+          "sink": {
+            "type": "JsonSink"
+          }
+        }
+      },
+      {
+        "name": "CopyItemsToADLS",
+        "type": "Copy",
+        "dependsOn": [
+          {
+            "activity": "FlattenItemsArray",
+            "dependencyConditions": ["Succeeded"]
+          }
+        ],
+        "inputs": [
+          {
+            "referenceName": "ItemsFlattenedDataset",
+            "type": "DatasetReference"
+          }
+        ],
+        "outputs": [
+          {
+            "referenceName": "ADLSItemsPath",
+            "type": "DatasetReference"
+          }
+        ],
+        "typeProperties": {
+          "source": {
+            "type": "JsonSource"
+          },
+          "sink": {
+            "type": "JsonSink"
+          }
+        }
+      }
+    ],
+    "variables": {
+      "thresholdUnixTs": {
+        "type": "Int"
+      }
+    },
+    "annotations": [],
+    "runtimeConfiguration": {
+      "concurrency": 1
+    }
+  }
+}
